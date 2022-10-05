@@ -1,40 +1,17 @@
 ﻿using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace CaptchaApi.Helpers
 {
-    public class CaptchaResult
-    {
-        public string CaptchaCode { get; set; }
-        public byte[] CaptchaByteData { get; set; }
-        public string CaptchBase64Data => Convert.ToBase64String(CaptchaByteData);
-        public DateTime Timestamp { get; set; }
-    }
+   
 
     public static class Captcha
     {
+
         const string Letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-        //private static string GenerateCaptcha()
-        //{
-        //    try
-        //    {
-        //        Random random = new Random();
-        //        string combination = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        //        StringBuilder captcha = new StringBuilder();
-        //        for (int i = 0; i < 6; i++)
-        //        {
-        //            captcha.Append(combination[random.Next(combination.Length)]);
-        //        }
-        //        return captcha.ToString();
-        //    }
-        //    catch
-        //    {
-        //        throw new Exception("Invalid!");
-        //    }
-        //}
-
 
         public static string GenerateCaptchaCode()
         {
@@ -43,7 +20,7 @@ namespace CaptchaApi.Helpers
 
             StringBuilder sb = new StringBuilder();
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 6; i++)
             {
                 int index = rand.Next(maxRand);
                 sb.Append(Letters[index]);
@@ -52,179 +29,42 @@ namespace CaptchaApi.Helpers
             return sb.ToString();
         }
 
-        public static bool ValidateCaptchaCode(string userInputCaptcha, HttpContext context)
-        {
-            var isValid = userInputCaptcha == context.Session.GetString("CaptchaCode");
-            context.Session.Remove("CaptchaCode");
-            return isValid;
-        }
 
-        public static CaptchaResult GenerateCaptchaImage(int width, int height, string captchaCode)
+        public static byte[] ImageToByteArray(Image img)
         {
-            using (System.Drawing.Bitmap baseMap = new Bitmap(width, height))
-            using (Graphics graph = Graphics.FromImage(baseMap))
+            using (var stream = new MemoryStream())
             {
-                Random rand = new Random();
-
-                graph.Clear(GetRandomLightColor());
-
-                DrawCaptchaCode();
-                DrawDisorderLine();
-                AdjustRippleEffect();
-
-                MemoryStream ms = new MemoryStream();
-
-                baseMap.Save(ms, ImageFormat.Png);
-
-                return new CaptchaResult { CaptchaCode = captchaCode, CaptchaByteData = ms.ToArray(), Timestamp = DateTime.Now };
-
-                int GetFontSize(int imageWidth, int captchCodeCount)
-                {
-                    var averageSize = imageWidth / captchCodeCount;
-
-                    return Convert.ToInt32(averageSize);
-                }
-
-                Color GetRandomDeepColor()
-                {
-                    int redlow = 160, greenLow = 100, blueLow = 160;
-                    return Color.FromArgb(rand.Next(redlow), rand.Next(greenLow), rand.Next(blueLow));
-                }
-
-                Color GetRandomLightColor()
-                {
-                    int low = 180, high = 255;
-
-                    int nRend = rand.Next(high) % (high - low) + low;
-                    int nGreen = rand.Next(high) % (high - low) + low;
-                    int nBlue = rand.Next(high) % (high - low) + low;
-
-                    return Color.FromArgb(nRend, nGreen, nBlue);
-                }
-
-                void DrawCaptchaCode()
-                {
-                    SolidBrush fontBrush = new SolidBrush(Color.Black);
-                    int fontSize = GetFontSize(width, captchaCode.Length);
-                    Font font = new Font(FontFamily.GenericSerif, fontSize, FontStyle.Bold, GraphicsUnit.Pixel);
-                    for (int i = 0; i < captchaCode.Length; i++)
-                    {
-                        fontBrush.Color = GetRandomDeepColor();
-
-                        int shiftPx = fontSize / 6;
-
-                        float x = i * fontSize + rand.Next(-shiftPx, shiftPx) + rand.Next(-shiftPx, shiftPx);
-                        int maxY = height - fontSize;
-                        if (maxY < 0) maxY = 0;
-                        float y = rand.Next(0, maxY);
-
-                        graph.DrawString(captchaCode[i].ToString(), font, fontBrush, x, y);
-                    }
-                }
-
-                void DrawDisorderLine()
-                {
-                    Pen linePen = new Pen(new SolidBrush(Color.Black), 3);
-                    for (int i = 0; i < rand.Next(3, 5); i++)
-                    {
-                        linePen.Color = GetRandomDeepColor();
-
-                        Point startPoint = new Point(rand.Next(0, width), rand.Next(0, height));
-                        Point endPoint = new Point(rand.Next(0, width), rand.Next(0, height));
-                        graph.DrawLine(linePen, startPoint, endPoint);
-
-                        //Point bezierPoint1 = new Point(rand.Next(0, width), rand.Next(0, height));
-                        //Point bezierPoint2 = new Point(rand.Next(0, width), rand.Next(0, height));
-
-                        //graph.DrawBezier(linePen, startPoint, bezierPoint1, bezierPoint2, endPoint);
-                    }
-                }
-
-                void AdjustRippleEffect()
-                {
-                    short nWave = 6;
-                    int nWidth = baseMap.Width;
-                    int nHeight = baseMap.Height;
-
-                    Point[,] pt = new Point[nWidth, nHeight];
-
-                    for (int x = 0; x < nWidth; ++x)
-                    {
-                        for (int y = 0; y < nHeight; ++y)
-                        {
-                            var xo = nWave * Math.Sin(2.0 * 3.1415 * y / 128.0);
-                            var yo = nWave * Math.Cos(2.0 * 3.1415 * x / 128.0);
-
-                            var newX = x + xo;
-                            var newY = y + yo;
-
-                            if (newX > 0 && newX < nWidth)
-                            {
-                                pt[x, y].X = (int)newX;
-                            }
-                            else
-                            {
-                                pt[x, y].X = 0;
-                            }
-
-
-                            if (newY > 0 && newY < nHeight)
-                            {
-                                pt[x, y].Y = (int)newY;
-                            }
-                            else
-                            {
-                                pt[x, y].Y = 0;
-                            }
-                        }
-                    }
-
-                    Bitmap bSrc = (Bitmap)baseMap.Clone();
-
-                    BitmapData bitmapData = baseMap.LockBits(new Rectangle(0, 0, baseMap.Width, baseMap.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
-                    BitmapData bmSrc = bSrc.LockBits(new Rectangle(0, 0, bSrc.Width, bSrc.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
-
-                    int scanline = bitmapData.Stride;
-
-                    IntPtr scan0 = bitmapData.Scan0;
-                    IntPtr srcScan0 = bmSrc.Scan0;
-
-                    unsafe
-                    {
-                        byte* p = (byte*)(void*)scan0;
-                        byte* pSrc = (byte*)(void*)srcScan0;
-
-                        int nOffset = bitmapData.Stride - baseMap.Width * 3;
-
-                        for (int y = 0; y < nHeight; ++y)
-                        {
-                            for (int x = 0; x < nWidth; ++x)
-                            {
-                                var xOffset = pt[x, y].X;
-                                var yOffset = pt[x, y].Y;
-
-                                if (yOffset >= 0 && yOffset < nHeight && xOffset >= 0 && xOffset < nWidth)
-                                {
-                                    if (pSrc != null)
-                                    {
-                                        p[0] = pSrc[yOffset * scanline + xOffset * 3];
-                                        p[1] = pSrc[yOffset * scanline + xOffset * 3 + 1];
-                                        p[2] = pSrc[yOffset * scanline + xOffset * 3 + 2];
-                                    }
-                                }
-
-                                p += 3;
-                            }
-                            p += nOffset;
-                        }
-                    }
-
-                    baseMap.UnlockBits(bitmapData);
-                    bSrc.UnlockBits(bmSrc);
-                    bSrc.Dispose();
-                }
+                img.Save(stream, ImageFormat.Png);
+                return stream.ToArray();
             }
         }
+
+        public static async Task<CaptchaItem> GenerateCaptchaImageAsync()
+        {
+            Bitmap bmp = new Bitmap(100, 30);
+            Graphics g = Graphics.FromImage(bmp);
+            g.Clear(Color.Green);
+            string captchaText = GenerateCaptchaCode();
+            g.DrawString(captchaText, new Font("Courier", 16),new SolidBrush(Color.WhiteSmoke), 2, 2);
+            g.FillRectangle(new HatchBrush(HatchStyle.BackwardDiagonal, Color.FromArgb(255, 0, 0, 0), Color.Transparent), g.ClipBounds);
+            g.FillRectangle(new HatchBrush(HatchStyle.ForwardDiagonal, Color.FromArgb(255, 0, 0, 0), Color.Transparent), g.ClipBounds);
+            var img = ImageToByteArray(bmp);
+            return  await Task.FromResult(
+                new CaptchaItem
+                {
+                    CaptchaImageBytes =img ,
+                    CaptchaCode=captchaText
+                }
+                );
+        }
+
+        public static async Task<bool> ValidateCaptchaCode(string userInputCaptcha, string captchaEncrypted)
+        {
+            var isValid = userInputCaptcha == SecurityHelper.Decryptword(captchaEncrypted);
+            return await Task.FromResult(isValid);
+        }
+
+
     }
 
 }
