@@ -7,17 +7,6 @@ namespace CaptchaApi.Controllers
     [Route("[controller]")]
     public class CaptchaController : ControllerBase
     {
-        private readonly ILogger<CaptchaController> _logger;
-      
-
-        public CaptchaController(
-            ILogger<CaptchaController> logger
-            )
-        {
-            _logger = logger;
-         }
-
-
         [Route("get-captcha-image")]
         [HttpGet]
         public async Task<IActionResult> GetCaptchaImage()
@@ -42,9 +31,15 @@ namespace CaptchaApi.Controllers
         [HttpPost]
         public async Task<bool> ValidateCaptcha(string userInputCaptcha, string captchaEncrypted)
         {
-            var capcha = await Captcha.ValidateCaptchaCode(userInputCaptcha, captchaEncrypted);
-            return capcha;
+            try
+            {
+                var capcha = await Captcha.ValidateCaptchaCode(userInputCaptcha, captchaEncrypted);
+                return capcha;
+            }
+            catch 
+            {
+                return false;
+            }
         }
-
     }
 }
