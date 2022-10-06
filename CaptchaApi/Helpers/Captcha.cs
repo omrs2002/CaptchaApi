@@ -11,7 +11,7 @@ namespace CaptchaApi.Helpers
     public static class Captcha
     {
 
-        const string Letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        const string Letters = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz";
 
         public static string GenerateCaptchaCode()
         {
