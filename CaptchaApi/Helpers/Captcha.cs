@@ -20,7 +20,7 @@ namespace CaptchaApi.Helpers
 
             StringBuilder sb = new StringBuilder();
 
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 4; i++)
             {
                 int index = rand.Next(maxRand);
                 sb.Append(Letters[index]);
@@ -41,13 +41,13 @@ namespace CaptchaApi.Helpers
 
         public static async Task<CaptchaItem> GenerateCaptchaImageAsync()
         {
-            Bitmap bmp = new Bitmap(100, 30);
+            Bitmap bmp = new Bitmap(130, 30);
             Graphics g = Graphics.FromImage(bmp);
             g.Clear(Color.Green);
             string captchaText = GenerateCaptchaCode();
-            g.DrawString(captchaText, new Font("Courier", 16),new SolidBrush(Color.WhiteSmoke), 2, 2);
-            g.FillRectangle(new HatchBrush(HatchStyle.BackwardDiagonal, Color.FromArgb(255, 0, 0, 0), Color.Transparent), g.ClipBounds);
-            g.FillRectangle(new HatchBrush(HatchStyle.ForwardDiagonal, Color.FromArgb(255, 0, 0, 0), Color.Transparent), g.ClipBounds);
+            g.DrawString(captchaText, new Font("Courier", 18),new SolidBrush(Color.White), 2, 2);
+            g.FillRectangle(new HatchBrush(HatchStyle.BackwardDiagonal, Color.FromArgb(255, 169, 169, 169), Color.Transparent), g.ClipBounds);
+            g.FillRectangle(new HatchBrush(HatchStyle.ForwardDiagonal, Color.FromArgb(255, 169, 169, 169), Color.Transparent), g.ClipBounds);
             var img = ImageToByteArray(bmp);
             return  await Task.FromResult(
                 new CaptchaItem

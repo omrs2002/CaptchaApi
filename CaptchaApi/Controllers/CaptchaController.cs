@@ -24,16 +24,18 @@ namespace CaptchaApi.Controllers
         {
             var capcha = await Captcha.GenerateCaptchaImageAsync();
             capcha.EncryptedCaptchaCode = SecurityHelper.Encryptword(capcha.CaptchaCode);
+            capcha.Timestamp = DateTime.UtcNow;
             return capcha;
         }
 
         [Route("validate-captcha")]
-        [HttpPost]
+        [HttpGet]
         public async Task<bool> ValidateCaptcha(string userInputCaptcha, string captchaEncrypted)
         {
             try
             {
-                var capcha = await Captcha.ValidateCaptchaCode(userInputCaptcha, captchaEncrypted);
+                if(userInputCaptcha.Trim()=="" || captchaEncrypted.Trim()=="") return false;
+                var capcha = await Captcha.ValidateCaptchaCode(userInputCaptcha.Trim(), captchaEncrypted.Trim());
                 return capcha;
             }
             catch 
