@@ -13,8 +13,8 @@ namespace CaptchaApi.Helpers
             byte[] SrctArray;
             byte[] EnctArray = UTF8Encoding.UTF8.GetBytes(Encryptval);
             SrctArray = UTF8Encoding.UTF8.GetBytes(key);
-            TripleDESCryptoServiceProvider objt = new TripleDESCryptoServiceProvider();
-            MD5CryptoServiceProvider objcrpt = new MD5CryptoServiceProvider();
+            var objt =  TripleDES.Create();
+            var objcrpt =  MD5.Create();
             SrctArray = objcrpt.ComputeHash(UTF8Encoding.UTF8.GetBytes(key));
             objcrpt.Clear();
             objt.Key = SrctArray;
@@ -30,8 +30,8 @@ namespace CaptchaApi.Helpers
             byte[] SrctArray;
             byte[] DrctArray = Convert.FromBase64String(DecryptText);
             SrctArray = UTF8Encoding.UTF8.GetBytes(key);
-            var objt = new TripleDESCryptoServiceProvider();
-            var objmdcript = new MD5CryptoServiceProvider();
+            var objt = TripleDES.Create();
+            var objmdcript = MD5.Create();
             SrctArray = objmdcript.ComputeHash(UTF8Encoding.UTF8.GetBytes(key));
             objmdcript.Clear();
             objt.Key = SrctArray;
